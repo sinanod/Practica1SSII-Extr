@@ -44,10 +44,10 @@ cursor.execute("DROP TABLE legal")
 cursor.execute("DROP TABLE users")
 
 cursor.execute(
-    "CREATE TABLE IF NOT EXISTS legal (nombrel,cookies,aviso,proteccion_de_datos,politicas,creacion,primary key(nombrel))")
+    "CREATE TABLE IF NOT EXISTS legal (nombrel,cookies,aviso,proteccionDatos,politicas,creacion,primary key(nombrel))")
 cursor.execute(
     "CREATE TABLE IF NOT EXISTS users (nombre,telefono,password,provincia,permisos,total_emails,phishing_email,cliclados_email,probClick,fechas,num_fechas,ips,num_ips,passVul,primary key (nombre))")
-insert_legal = """INSERT INTO legal (nombrel,cookies,aviso,proteccion_de_datos,politicas,creacion) VALUES (?,?,?,?,?,?)"""
+insert_legal = """INSERT INTO legal (nombrel,cookies,aviso,proteccionDatos,politicas,creacion) VALUES (?,?,?,?,?,?)"""
 insert_users = """INSERT INTO users (nombre,telefono,password,provincia,permisos,total_emails,phishing_email,cliclados_email,probClick,fechas,num_fechas,ips,num_ips,passVul) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
 
 for i in dataLegal['legal']:
@@ -208,7 +208,7 @@ dfConexiones = pd.DataFrame()
 dfCritico = pd.DataFrame()
 
 def ejercicio4():
-    cursor.execute('SELECT nombrel, cookies, aviso, proteccion_de_datos FROM legal ORDER BY politicas')
+    cursor.execute('SELECT nombrel, cookies, aviso, proteccionDatos FROM legal ORDER BY politicas')
     cols = cursor.fetchall()
     nombre = []
     cookies = []
@@ -231,7 +231,7 @@ def ejercicio4():
         creacion += [cols[i][0]]
     dfPrivacidad['Creacion'] = creacion
 
-    cursor.execute('SELECT creacion, proteccionDatos FROM legal WHERE proteccion_de_datos=1 ORDER BY creacion')
+    cursor.execute('SELECT creacion, proteccionDatos FROM legal WHERE proteccionDatos=1 ORDER BY creacion')
     cols = cursor.fetchall()
     seCumple = [0]*len(creacion)
     for i in range(len(creacion)):
@@ -240,7 +240,7 @@ def ejercicio4():
                 seCumple[i] += 1
     dfPrivacidad['Se cumple'] = seCumple
 
-    cursor.execute('SELECT creacion, proteccionDatos FROM legal WHERE proteccion_de_datos=0 ORDER BY creacion')
+    cursor.execute('SELECT creacion, proteccionDatos FROM legal WHERE proteccionDatos=0 ORDER BY creacion')
     cols = cursor.fetchall()
     noSeCumple = [0] * len(creacion)
     for i in range(len(creacion)):
