@@ -116,23 +116,178 @@ def ejercicio2():
     print("Maximo", dataFrame['Total Emails'].max())
     print("Minimo", dataFrame['Total Emails'].min())
 
+dfUsuarios = pd.DataFrame()
+dfAdmins = pd.DataFrame()
+dfMenor200 = pd.DataFrame()
+dfMayor200 = pd.DataFrame()
+totalDF = pd.DataFrame()
+
+
 def ejercicio3():
-    query = con.execute("SELECT * From users where permisos  = 0")
-    cols = [column[0] for column in query.description]
-    dUsersUser = pd.DataFrame.from_records(data=query.fetchall(), columns=cols)
 
-    query = con.execute("SELECT * From users where permisos  = 1")
-    cols = [column[0] for column in query.description]
-    dUsersAdmin = pd.DataFrame.from_records(data=query.fetchall(), columns=cols)
 
-    query = con.execute("SELECT * From users where emailsPhising >= 200")
-    cols = [column[0] for column in query.description]
-    dUsersMas200 = pd.DataFrame.from_records(data=query.fetchall(), columns=cols)
+    cursor.execute('SELECT phishing_email FROM users where permisos="0"')
+    rows = cursor.fetchall()
+    res = []
+    for i in rows:
+        res += [i[0]]
+    dfUsuarios['Phishing Emails Permisos Usuario'] = res
 
-    query = con.execute("SELECT * From users where emailsPhising < 200")
-    cols = [column[0] for column in query.description]
-    dUsersMenos200 = pd.DataFrame.from_records(data=query.fetchall(), columns=cols)
+    cursor.execute('SELECT phishing_email FROM users where permisos="1"')
+    rows = cursor.fetchall()
+    res = []
+    for i in rows:
+        res += [i[0]]
+    dfAdmins['Phishing Emails Permisos Admin'] = res
+
+    cursor.execute('SELECT phishing_email FROM users where total_emails<200')
+    rows = cursor.fetchall()
+    res = []
+    for i in rows:
+        res += [i[0]]
+    dfMenor200['Phishing Emails De Gente con < 200 correos'] = res
+
+    cursor.execute('SELECT phishing_email FROM users where total_emails>=200')
+    rows = cursor.fetchall()
+    res = []
+    for i in rows:
+        res += [i[0]]
+    dfMayor200['Phishing Emails de Gente >= 200 correos'] = res
+
+    print("EJERCICIO 3\n")
+    print("Phishing Emails de Permisos Usuario\n")
+    print(dfUsuarios.describe())
+    print(dfUsuarios)
+    num_missing = dfUsuarios.isna().sum()
+    print("Valores Missing de", num_missing)
+    print("\n")
+
+    print("Phishing Emails de Permisos Administrador\n")
+    print(dfAdmins.describe())
+    print(dfAdmins)
+    num_missing = dfAdmins.isna().sum()
+    print("Valores Missing de", num_missing)
+    print("\n")
+
+    print("Phishing Emails de Personas con menos de 200 correos\n")
+    print(dfMenor200.describe())
+    print(dfMenor200)
+    num_missing = dfMenor200.isna().sum()
+    print("Valores Missing de", num_missing)
+    print("\n")
+
+    print("Phishing Emails de Personas con mas o igual de 200 correos\n")
+    print(dfMayor200)
+    print(dfMayor200.describe())
+    num_missing = dfMayor200.isna().sum()
+    print("Valores Missing de", num_missing)
+    print("\n")
+
+    totalDF = pd.concat([dfAdmins,dfUsuarios,dfMayor200,dfMenor200],axis = 1)
+    print("Numero de Observaciones\n")
+    print(totalDF.count(),"\n")
+    print("Numero de valores Missing\n")
+    print(totalDF.isna().sum(),"\n")
+    print("Medianas\n")
+    print(totalDF.median(),"\n")
+    print("Medias\n")
+    print(totalDF.mean(),"\n")
+    print("Desviaciones\n")
+    print(totalDF.std(),"\n")
+    print("Maximos\n")
+    print(totalDF.max(),"\n")
+    print("Minimos\n")
+    print(totalDF.min(),"\n")
+
+
+
+dfLegal = pd.DataFrame()
+dfPrivacidad = pd.DataFrame()
+dfVulnerable = pd.DataFrame()
+dfConexiones = pd.DataFrame()
+dfCritico = pd.DataFrame()
+
+def ejercicio4():
+    cursor.execute('SELECT nombrel, cookies, aviso, proteccion_de_datos FROM legal ORDER BY politicas')
+    cols = cursor.fetchall()
+    nombre = []
+    cookies = []
+    avisos = []
+    proteccionDatos = []
+    for i in range(len(cols)):
+        nombre += [cols[i][0]]
+        cookies += [cols[i][1]]
+        avisos += [cols[i][2]]
+        proteccionDatos += [cols[i][3]]
+    dfLegal['Nombre'] = nombre
+    dfLegal['Cookies'] = cookies
+    dfLegal['Avisos'] = avisos
+    dfLegal['Proteccion de Datos'] = proteccionDatos
+
+    cursor.execute('SELECT DISTINCT creacion FROM legal ORDER BY creacion')
+    cols = cursor.fetchall()
+    creacion = []
+    for i in range(len(cols)):
+        creacion += [cols[i][0]]
+    dfPrivacidad['Creacion'] = creacion
+
+    cursor.execute('SELECT creacion, proteccionDatos FROM legal WHERE proteccion_de_datos=1 ORDER BY creacion')
+    cols = cursor.fetchall()
+    seCumple = [0]*len(creacion)
+    for i in range(len(creacion)):
+        for j in range(len(cols)):
+            if cols[j][0] == creacion[i]:
+                seCumple[i] += 1
+    dfPrivacidad['Se cumple'] = seCumple
+
+    cursor.execute('SELECT creacion, proteccionDatos FROM legal WHERE proteccion_de_datos=0 ORDER BY creacion')
+    cols = cursor.fetchall()
+    noSeCumple = [0] * len(creacion)
+    for i in range(len(creacion)):
+        for j in range(len(cols)):
+            if cols[j][0] == creacion[i]:
+                noSeCumple[i] += 1
+    dfPrivacidad['No se cumple'] = noSeCumple
+
+    cursor.execute('SELECT COUNT(num_ips) FROM users where num_ips>=10')
+    cols = cursor.fetchall()
+    resultado = []
+    for i in cols:
+        resultado += [i[0]]
+    dfVulnerable['Comprometidas'] = resultado
+
+    cursor.execute('SELECT COUNT(num_ips) FROM users where num_ips<10')
+    cols = cursor.fetchall()
+    resultado = []
+    for i in cols:
+        resultado += [i[0]]
+    dfVulnerable['No Comprometidas'] = resultado
+
+
+    cursor.execute('SELECT AVG (num_ips) FROM users where passVul=1')
+    cols = cursor.fetchall()
+    resultado = []
+    for i in cols:
+        resultado += [i[0]]
+    dfConexiones['Vulnerables'] = resultado
+
+    cursor.execute('SELECT AVG(num_ips) FROM users where passVul=2')
+    cols = cursor.fetchall()
+    resultado = []
+    for i in cols:
+        resultado += [i[0]]
+    dfConexiones['No Vulnerables'] = resultado
+
+
+
+    cursor.execute('SELECT probabilidad_click FROM users where passVul=1 ORDER BY probabilidad_click DESC')
+    cols = cursor.fetchall()
+    resultado = []
+    for i in cols:
+        resultado += [i[0]]
+    dfCritico['Probabilidad de Click'] = resultado
 
 
 ejercicio2()
 ejercicio3()
+ejercicio4()
