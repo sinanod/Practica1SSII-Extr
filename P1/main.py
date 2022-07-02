@@ -164,7 +164,7 @@ def ejercicio3():
         res += [i[0]]
     dfMayor200['Phishing Emails de Gente >= 200 correos'] = res
 
-    print("EJERCICIO 3\n")
+    print("\nEJERCICIO 3\n")
     print("Phishing Emails de Permisos Usuario\n")
     print(dfUsuarios.describe())
     print(dfUsuarios)
