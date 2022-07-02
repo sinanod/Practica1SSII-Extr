@@ -1,8 +1,18 @@
 import hashlib
+import os
 import sqlite3
 import json
+import pandas
 import pandas as pd
 from urllib.request import urlopen
+import plotly.express as px
+import plotly.utils
+import plotly.graph_objects as go
+import plotly.express as px
+from fpdf import FPDF
+from flask import Flask, render_template, request,redirect, session, app
+
+
 
 fLegal = open('legal.json')
 fUsers = open('users.json')
@@ -280,14 +290,19 @@ def ejercicio4():
 
 
 
-    cursor.execute('SELECT probabilidad_click FROM users where passVul=1 ORDER BY probabilidad_click DESC')
+    cursor.execute('SELECT probClick FROM users where passVul=1 ORDER BY probClick DESC')
     cols = cursor.fetchall()
     resultado = []
     for i in cols:
         resultado += [i[0]]
     dfCritico['Probabilidad de Click'] = resultado
 
+class PDF(FPDF):
+    pass
 
 ejercicio2()
 ejercicio3()
 ejercicio4()
+
+
+con.close()
