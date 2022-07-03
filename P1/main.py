@@ -50,7 +50,7 @@ def checkPass(password):
 con = sqlite3.connect('PRACTICA1.DB')
 cursor = con.cursor()
 
-cursor.execute("DROP TABLE legal")
+'''cursor.execute("DROP TABLE legal")
 cursor.execute("DROP TABLE users")
 
 cursor.execute(
@@ -81,7 +81,7 @@ for i in dataUsers['usuarios']:
         con.commit()
 
 con.commit()
-
+'''
 dataFrame = pd.DataFrame()
 
 
@@ -217,8 +217,10 @@ dfVulnerable = pd.DataFrame()
 dfConexiones = pd.DataFrame()
 dfCritico = pd.DataFrame()
 
+
+
 def ejercicio4():
-    cursor.execute('SELECT nombrel, cookies, aviso, proteccionDatos FROM legal ORDER BY politicas')
+    cursor.execute('SELECT nombrel, cookies, aviso, proteccionDatos FROM legal ORDER BY politicas limit 5')
     cols = cursor.fetchall()
     nombre = []
     cookies = []
@@ -233,6 +235,15 @@ def ejercicio4():
     dfLegal['Cookies'] = cookies
     dfLegal['Avisos'] = avisos
     dfLegal['Proteccion de Datos'] = proteccionDatos
+
+    fig = go.Figure(data=[
+        go.Bar(name='Cookies', x=dfLegal['Nombre'], y=dfLegal['Cookies'], marker_color='steelblue'),
+        go.Bar(name='Avisos', x=dfLegal['Nombre'], y=dfLegal['Avisos'], marker_color='lightsalmon'),
+        go.Bar(name='Proteccion de datos', x=dfLegal['Nombre'], y=dfLegal['Proteccion de Datos'], marker_color='red')
+    ])
+
+    fig.update_layout(title_text="Cinco peores webs", title_font_size=41, barmode='group')
+    plotly.io.write_image(fig, file='pltxWeb.png', format='png', width=700, height=450)
 
     cursor.execute('SELECT DISTINCT creacion FROM legal ORDER BY creacion')
     cols = cursor.fetchall()
@@ -259,6 +270,15 @@ def ejercicio4():
                 noSeCumple[i] += 1
     dfPrivacidad['No se cumple'] = noSeCumple
 
+    fig = go.Figure(data=[
+        go.Bar(name='Se cumple', x=dfPrivacidad['Creacion'], y=dfPrivacidad['Se cumple'], marker_color='steelblue'),
+        go.Bar(name='No se cumple', x=dfPrivacidad['Creacion'], y=dfPrivacidad['No se cumple'], marker_color='lightsalmon')
+    ])
+
+    fig.update_layout(title_text="Privacidad segun el Año de Creación", title_font_size=41, barmode='group')
+    plotly.io.write_image(fig, file='pltxPrivacidad.png', format='png', width=700, height=450)
+
+
     cursor.execute('SELECT COUNT(num_ips) FROM users where num_ips>=10')
     cols = cursor.fetchall()
     resultado = []
@@ -273,6 +293,12 @@ def ejercicio4():
         resultado += [i[0]]
     dfVulnerable['No Comprometidas'] = resultado
 
+    labels = ['No Comprometidas', 'Comprometidas']
+    values = [dfVulnerable.at[0, 'No Comprometidas'], dfVulnerable.at[0, 'Comprometidas']]
+    fig = go.Figure(data=[
+        go.Pie(labels=labels, values=values)])
+    fig.update_layout(title_text="Comparación de contraseñas", title_font_size=41, barmode='group')
+    plotly.io.write_image(fig, file='pltxContraseñas.png', format='png', width=700, height=450)
 
     cursor.execute('SELECT AVG (num_ips) FROM users where passVul=1')
     cols = cursor.fetchall()
@@ -288,17 +314,30 @@ def ejercicio4():
         resultado += [i[0]]
     dfConexiones['No Vulnerables'] = resultado
 
+    labels = ['Vulnerables', 'No Vulnerables']
+    values = [dfConexiones.at[0, 'Vulnerables'], dfConexiones.at[0, 'No Vulnerables']]
+    fig = go.Figure(data=[
+        go.Pie(labels=labels, values=values)])
+    fig.update_layout(title_text="Media de conexiones de usuarios", title_font_size=41, barmode='group')
+    plotly.io.write_image(fig, file='pltxMediaConexiones.png', format='png', width=700, height=450)
 
 
-    cursor.execute('SELECT probClick FROM users where passVul=1 ORDER BY probClick DESC')
+    cursor.execute('SELECT nombre,probClick FROM users where passVul=1 ORDER BY probClick DESC LIMIT 10')
     cols = cursor.fetchall()
     resultado = []
     for i in cols:
         resultado += [i[0]]
-    dfCritico['Probabilidad de Click'] = resultado
 
-class PDF(FPDF):
-    pass
+    nombre = []
+    prob = []
+    for i in range(len(cols)):
+        nombre += [cols[i][0]]
+        prob += [cols[i][1]]
+    dfCritico['Nombre'] = nombre
+    dfCritico['Probabilidad de Click'] = prob
+    fig = px.bar(dfCritico, x=dfCritico['Nombre'], y=dfCritico['Probabilidad de Click'])
+    fig.update_layout(title_text="Usuarios más críticos", title_font_size=41, barmode='group')
+    plotly.io.write_image(fig, file='pltxUsers.png', format='png', width=700, height=450)
 
 ejercicio2()
 ejercicio3()
